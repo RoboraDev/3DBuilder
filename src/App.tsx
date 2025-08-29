@@ -1,11 +1,12 @@
 import './App.css';
-import RobotScene from './components/RobotScene';
+import RobotBuilder from './components/RobotBuilder';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <RobotScene/>
+        {/* Load the robot URDF file into our RobotBuilder */}
+        <RobotBuilder url="/urdf/cassie/cassie.urdf"/>
       </header>
     </div>
   );
