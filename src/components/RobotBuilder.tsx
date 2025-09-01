@@ -5,7 +5,7 @@ import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import * as THREE from "three";
 import URDFLoader, { URDFRobot, URDFJoint } from "urdf-loader";
 
-const moveableColor = new THREE.Color('#ffff00');
+const moveableColor = new THREE.Color('#eeee31');
 
 // 🟢 RobotBuilder component
 // Loads a URDF robot and allows:
@@ -60,12 +60,12 @@ const RobotBuilder = ({url}:{url: string}) => {
   }, [url]);
 
   // Helper function to find the nearest URDFJoint object in the hierarchy
-  const findURDFJointFromObject = useCallback((startObj: THREE.Object3D): THREE.Object3D | null => {
+  const findURDFJointFromObject = useCallback((startObj: THREE.Object3D):  URDFJoint | null => {
       let current: THREE.Object3D | null = startObj;
 
       while (current) {
       if (current.type === "URDFJoint") {
-        return current;
+        return current as URDFJoint;
       }
       current = current.parent;
       }
@@ -73,16 +73,23 @@ const RobotBuilder = ({url}:{url: string}) => {
       return null;
   }, []);
 
+  const getRotationDirection = useCallback((joint: URDFJoint, camera: THREE.Camera) => {
+    const axis = joint.axis.clone().applyQuaternion(joint.quaternion);
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    return -Math.sign(axis.dot(forward)) || 1; // fallback to 1 if dot=0
+  }, [])
+
   // 🖱️ Mouse move → while dragging, rotate the selected joint
   const onPointerOver = useCallback((e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation(); // prevent event bubbling
-
     if(!isDragging && !isRotating) {
-      const joint = findURDFJointFromObject(e.object) as URDFJoint;
+      const joint = findURDFJointFromObject(e.object);
+      if (!joint) return;
       const mesh = e.object as THREE.Mesh;
       const material = mesh.material as THREE.MeshPhongMaterial;
       selectedJointColor.current = `#${material.color.getHexString()}`
-      if (joint && joint.jointValue.length) material.color.set(moveableColor);      
+      if (joint.jointValue.length) material.color.set(moveableColor);      
     }    
   },[isDragging, isRotating, findURDFJointFromObject]);
 
@@ -128,20 +135,16 @@ const RobotBuilder = ({url}:{url: string}) => {
       
       // Compute rotation direction based on camera orientation
       const camera  = controlsRef.current!.object;
-      const vector = new THREE.Vector3();
-      camera.getWorldDirection(vector);
-      // TODO: improve direction calculation based on vector internals. It can be a map which transforms the vector into a direction
-      const direction = -Math.sign(vector.z); // either +1 or -1
-      
-      // Add a small increment proportional to mouse movement
-      const sensitivity = 0.01; // sensitivity factor (smaller = slower rotation)
-      const newValue = currentValue + dx * sensitivity * direction;
+      const direction = getRotationDirection(joint, camera);
 
-      // Apply new joint angle to the robot
+      // Use it when applying new joint value
+      const sensitivity = 0.01;
+      const newValue = currentValue + dx * sensitivity * direction;
+      // console.log({currentValue, dx, dot, direction})
       const clamped = THREE.MathUtils.clamp(newValue, joint.limit.lower, joint.limit.upper);
       robot.setJointValue(selectedJoint, clamped);
     }
-  }, [robot, isDragging, selectedJoint]);
+  }, [robot, isDragging, selectedJoint, getRotationDirection]);
 
   // 🖱️ Mouse up → stop dragging
   const handlePointerUp = useCallback(() => {
@@ -172,7 +175,7 @@ const RobotBuilder = ({url}:{url: string}) => {
       <Canvas camera={{ position: [2, 2, 2], fov: 50 }} gl={{ antialias: true }}>
         <color attach="background" args={["#e4ebd3"]} />
         
-        <ambientLight intensity={0.5} /> {/* soft global light */}
+        <ambientLight intensity={0.8} /> {/* soft global light */}
         <directionalLight position={[5, 10, 5]} intensity={1.5} /> {/* directional light */}
         
         {/* Camera controls: rotate, pan, zoom around scene */}
