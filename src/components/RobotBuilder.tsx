@@ -51,6 +51,14 @@ const RobotBuilder = ({url}:{url: string}) => {
         urdf.position.set(0, 0, 0); // position at world origin
         urdf.rotation.set(-Math.PI / 2, 0, 0); // rotate to stand upright
 
+        // Set joints rotation natural position
+        Object.keys(urdf.joints).forEach((jointName) => {
+          const joint = urdf.joints[jointName];
+          const jointValue = joint.jointValue[0] | 0;
+          const clamped = THREE.MathUtils.clamp(jointValue, joint.limit.lower, joint.limit.upper);
+          urdf.setJointValue(jointName, clamped);
+        });
+
         // Save robot into React state so it gets rendered
         setRobot(urdf);
       },
@@ -110,6 +118,7 @@ const RobotBuilder = ({url}:{url: string}) => {
 
     // If that mesh corresponds to a real joint in the robot
     const joint = findURDFJointFromObject(e.object) as URDFJoint;
+    console.log({joint})
     if (joint && joint.jointValue.length) {
       setSelectedJoint(joint.name); // save joint name
       setSelectedMesh(e.object as THREE.Mesh); //save mesh
