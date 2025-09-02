@@ -1,13 +1,11 @@
-import './App.css';
 import RobotBuilder from './components/RobotBuilder';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        {/* Load the robot URDF file into our RobotBuilder */}
-        <RobotBuilder url="/urdf/cassie/cassie.urdf"/>
-      </header>
+      <header className="text-3xl text-center font-bold">3D Builder</header>
+      {/* Load the robot URDF file into our RobotBuilder */}
+      <RobotBuilder url="/urdf/cassie/cassie.urdf"/>
     </div>
   );
 }

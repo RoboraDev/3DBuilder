@@ -118,7 +118,7 @@ const RobotBuilder = ({ url }:{url: string}) => {
 
     // If that mesh corresponds to a real joint in the robot
     const joint = findURDFJointFromObject(e.object) as URDFJoint;
-    if (joint && joint.jointValue.length) {
+    if (joint?.jointValue.length) {
       setSelectedJoint(joint.name); // save joint name
       setSelectedMesh(e.object as THREE.Mesh); //save mesh
       setIsDragging(true); // enter dragging mode
@@ -128,7 +128,6 @@ const RobotBuilder = ({ url }:{url: string}) => {
 
   // 🖱️ Mouse move → while dragging, rotate the selected joint
   const handlePointerMove = useCallback((e: MouseEvent) => {
-    // TODO: implement joint rotation correctly
     if (robot && isDragging && selectedJoint) {
       const joint = robot.joints[selectedJoint];
       
