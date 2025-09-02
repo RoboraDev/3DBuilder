@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { Canvas, ThreeEvent  } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { Canvas, ThreeEvent  } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-import * as THREE from "three";
-import URDFLoader, { URDFRobot, URDFJoint } from "urdf-loader";
+import * as THREE from 'three';
+import URDFLoader, { URDFRobot, URDFJoint } from 'urdf-loader';
 
 const moveableColor = new THREE.Color('#eeee31');
 
@@ -15,7 +15,7 @@ const moveableColor = new THREE.Color('#eeee31');
 
 // 🟢 Scene wrapper component
 // Creates a full 3D canvas and inserts RobotBuilder inside
-const RobotBuilder = ({url}:{url: string}) => {
+const RobotBuilder = ({ url }:{url: string}) => {
   // State to store the loaded robot object (from URDF)
   const [robot, setRobot] = useState<URDFRobot| null>(null);
   
@@ -25,7 +25,7 @@ const RobotBuilder = ({url}:{url: string}) => {
   const [selectedMesh, setSelectedMesh] = useState<THREE.Mesh | null>(null);
 
   // Used to store original color of selected joint outside of the component as it is not used in React dom
-  let selectedJointColor = useRef<`#${string}` | null>(null);
+  const selectedJointColor = useRef<`#${string}` | null>(null);
 
   // Are we currently dragging the mouse to rotate a joint?
   const [isDragging, setIsDragging] = useState(false);
@@ -63,22 +63,22 @@ const RobotBuilder = ({url}:{url: string}) => {
         setRobot(urdf);
       },
       undefined, // onProgress callback (not used here)
-      (err) => console.error("Failed to load URDF", err)
+      (err) => console.error('Failed to load URDF', err),
     );
   }, [url]);
 
   // Helper function to find the nearest URDFJoint object in the hierarchy
   const findURDFJointFromObject = useCallback((startObj: THREE.Object3D):  URDFJoint | null => {
-      let current: THREE.Object3D | null = startObj;
+    let current: THREE.Object3D | null = startObj;
 
-      while (current) {
-      if (current.type === "URDFJoint") {
+    while (current) {
+      if (current.type === 'URDFJoint') {
         return current as URDFJoint;
       }
       current = current.parent;
-      }
+    }
 
-      return null;
+    return null;
   }, []);
 
   const getRotationDirection = useCallback((joint: URDFJoint, camera: THREE.Camera) => {
@@ -86,17 +86,17 @@ const RobotBuilder = ({url}:{url: string}) => {
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
     return -Math.sign(axis.dot(forward)) || 1; // fallback to 1 if dot=0
-  }, [])
+  }, []);
 
   // 🖱️ Mouse move → while dragging, rotate the selected joint
   const onPointerOver = useCallback((e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation(); // prevent event bubbling
-    if(!isDragging && !isRotating) {
+    if (!isDragging && !isRotating) {
       const joint = findURDFJointFromObject(e.object);
       if (!joint) return;
       const mesh = e.object as THREE.Mesh;
       const material = mesh.material as THREE.MeshPhongMaterial;
-      selectedJointColor.current = `#${material.color.getHexString()}`
+      selectedJointColor.current = `#${material.color.getHexString()}`;
       if (joint.jointValue.length) material.color.set(moveableColor);      
     }    
   },[isDragging, isRotating, findURDFJointFromObject]);
@@ -118,7 +118,6 @@ const RobotBuilder = ({url}:{url: string}) => {
 
     // If that mesh corresponds to a real joint in the robot
     const joint = findURDFJointFromObject(e.object) as URDFJoint;
-    console.log({joint})
     if (joint && joint.jointValue.length) {
       setSelectedJoint(joint.name); // save joint name
       setSelectedMesh(e.object as THREE.Mesh); //save mesh
@@ -169,20 +168,20 @@ const RobotBuilder = ({url}:{url: string}) => {
 
   // Attach global mousemove + mouseup listeners
   useEffect(() => {
-    window.addEventListener("mousemove", handlePointerMove);
-    window.addEventListener("mouseup", handlePointerUp);
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerUp);
 
     return () => {
-      window.removeEventListener("mousemove", handlePointerMove);
-      window.removeEventListener("mouseup", handlePointerUp);
+      window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('mouseup', handlePointerUp);
     };
   });
 
 
   return (
-    <div style={{ width: "100%", height: "100vh" }}>
+    <div style={{ width: '100%', height: '100vh' }}>
       <Canvas camera={{ position: [2, 2, 2], fov: 50 }} gl={{ antialias: true }}>
-        <color attach="background" args={["#e4ebd3"]} />
+        <color attach="background" args={['#e4ebd3']} />
         
         <ambientLight intensity={0.8} /> {/* soft global light */}
         <directionalLight position={[5, 10, 5]} intensity={1.5} /> {/* directional light */}
